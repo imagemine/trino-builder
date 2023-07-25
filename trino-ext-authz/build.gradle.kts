@@ -12,7 +12,7 @@ configurations {
 val plugin by configurations.runtimeClasspath
 dependencies {
     listOf("trino-spi", "trino-plugin-toolkit").forEach { name ->
-        implementation("io.trino:${name}:418")
+        implementation("io.trino:${name}:422")
     }
     implementation("com.google.guava:guava:30.1.1-jre")
     compileOnly("org.slf4j:slf4j-api:1.7.36")

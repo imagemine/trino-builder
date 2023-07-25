@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 clean_unused_files() {
   local target=$1
@@ -23,11 +24,13 @@ clean_unused_files() {
     n=$((n+1))
   done;
 }
-
+wd=$(pwd)
+cd /tmp
 clean_unused_files /usr/lib/trino/lib
 
 for d in $(ls /usr/lib/trino/plugin);
 do
   clean_unused_files /usr/lib/trino/plugin/$d;
 done;
+cd $wd
 
