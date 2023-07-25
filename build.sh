@@ -38,7 +38,7 @@ all() {
   if [[ ! -z ${version} ]];
   then
     source project.properties
-    local image_version_tag="${owner}/${project}:${hive_version}-${version}"
+    local image_version_tag="${owner}/${project}:${trino_version}-${version}"
     local image_latest_tag="${owner}/${project}:latest"
     echo building ${image_version_tag}
     docker build --no-cache -t ${image_version_tag} --build-arg TRINO_BIN_VERSION=${trino_version} .
