@@ -1,0 +1,16 @@
+*.gz
+.idea
+*.iml
+*.iws
+*.ipr
+build
+hive-site.xml
+/bin
+out
+.gradle
+hive/output
+hive/data
+*.class
+
+
+
