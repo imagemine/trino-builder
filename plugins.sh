@@ -30,7 +30,7 @@ clean_unused_files /usr/lib/trino/lib
 
 for d in $(ls /usr/lib/trino/plugin);
 do
-  clean_unused_files /usr/lib/trino/plugin/$d;
+  #clean_unused_files /usr/lib/trino/plugin/$d;
 done;
 cd $wd
 
