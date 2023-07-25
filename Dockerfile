@@ -7,3 +7,7 @@ COPY trino-ext-authz/build/libs/trino-ext-authz.jar /usr/lib/trino/plugin/ext/tr
 COPY trino-ext-authz/build/ext/*.jar /usr/lib/trino/plugin/ext
 
 COPY hive-authz/build/libs/hive-authz.jar /usr/lib/trino/plugin/hive/hive-authz.jar
+COPY plugins.sh /tmp/plugins.sh
+RUN /tmp/plugins.sh
+
+
