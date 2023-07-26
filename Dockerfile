@@ -10,7 +10,9 @@ COPY trino-ext-authz/build/ext/ /usr/lib/trino/plugin/ext/
 COPY hive-authz/build/libs/hive-authz.jar /usr/lib/trino/plugin/hive/hive-authz.jar
 COPY plugins.sh /tmp/plugins.sh
 RUN /tmp/plugins.sh
+USER root
 RUN apt-get remove zip
+USER trino
 
 
 
