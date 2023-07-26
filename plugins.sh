@@ -9,14 +9,14 @@ clean_unused_files() {
     cleaned=0
     for pom in $(jar tvf $target/$jf|grep -E "pom.(xml|properties)$"|awk -F" " '{print $8}');
     do
-      zip -d $target/$jf $pom
+      zip -q -d $target/$jf $pom
       cleaned=1
     done;
     if [[ $cleaned -eq 1 ]] || [[ $jf =~ ^[a-z]+.*$ ]];
     then
       ok=1
       echo $(date) $jf > RELEASE
-      zip -u $target/$jf RELEASE
+      zip -q -u $target/$jf RELEASE
       if [[ "$mode" == "1" ]]; then
         mv $target/$jf $target/lib-$n.jar
       fi;
@@ -30,7 +30,7 @@ clean_unused_files /usr/lib/trino/lib
 
 for d in $(ls /usr/lib/trino/plugin);
 do
-  #clean_unused_files /usr/lib/trino/plugin/$d;
+  echo clean_unused_files /usr/lib/trino/plugin/$d;
 done;
 cd $wd
 
