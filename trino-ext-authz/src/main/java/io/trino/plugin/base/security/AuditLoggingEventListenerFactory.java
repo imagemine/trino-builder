@@ -7,13 +7,38 @@ import io.trino.spi.eventlistener.QueryCreatedEvent;
 import io.trino.spi.eventlistener.QueryFailureInfo;
 import io.trino.spi.eventlistener.SplitCompletedEvent;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.ZoneId;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.stream.Collectors;
+
+enum AuditLogLevel {
+    DEBUG {
+        @Override
+        public int levelValue() {
+            return 0;
+        }
+    }, INFO {
+        @Override
+        public int levelValue() {
+            return 1;
+        }
+    }, ERROR {
+        @Override
+        public int levelValue() {
+            return 2;
+        }
+    };
+
+    public abstract int levelValue();
+
+}
+
 
 public class AuditLoggingEventListenerFactory implements EventListenerFactory {
     @Override
@@ -23,15 +48,33 @@ public class AuditLoggingEventListenerFactory implements EventListenerFactory {
 
     @Override
     public EventListener create(Map<String, String> config) {
-        System.out.println("event listener input " + config);
-        return new LoggingEventListener();
+        OutputStream os;
+        AuditLogLevel auditLevel;
+        try {
+            String level = config.getOrDefault("log.level", "INFO");
+            auditLevel = AuditLogLevel.valueOf(level.toUpperCase());
+            String target = config.getOrDefault("target", "stdout");
+
+            if ("file".equalsIgnoreCase(target)) {
+                String path = config.getOrDefault("path", "/tmp/out.log");
+                os = new FileOutputStream(new File(path));
+            } else {
+                os = System.out;
+            }
+        } catch (IOException ioe) {
+            throw new RuntimeException("could not initialise audit logger", ioe);
+        }
+        return new LoggingEventListener(os, auditLevel);
     }
 }
 
 class AttributeLogger {
+    private static final byte[] NEW_LINE = "\n".getBytes(StandardCharsets.UTF_8);
     private Map<String, Object> attributes = new TreeMap<>();
+    private final OutputStream fso;
 
-    private AttributeLogger() {
+    private AttributeLogger(OutputStream fso) {
+        this.fso = fso;
     }
 
     public AttributeLogger withAttribute(String name, Object value) {
@@ -44,58 +87,82 @@ class AttributeLogger {
         for (Map.Entry<String, Object> entry : attributes.entrySet()) {
             snippets.add("\"".concat(entry.getKey()).concat("\":\"").concat(entry.getValue().toString()).concat("\""));
         }
-        System.out.println(snippets.stream().collect(Collectors.joining(",", "{", "}")));
+        byte[] data = snippets.stream().collect(Collectors.joining(",", "{", "}")).getBytes(StandardCharsets.UTF_8);
+        try {
+            fso.write(data);
+            fso.write(NEW_LINE);
+            fso.flush();
+        } catch (IOException ioe) {
+            System.err.printf("{\"logger\": \"auditlog\", \"level\":\"ERROR\", \"message\": \"oops with output stream, cause: %s\"}\n", ioe.getMessage());
+        }
     }
 
-    public static AttributeLogger newInstance() {
-        return new AttributeLogger();
+    public static AttributeLogger newInstance(OutputStream fso) {
+        return new AttributeLogger(fso);
     }
 }
 
+
 class LoggingEventListener implements EventListener {
+    private final OutputStream fso;
+    private final AuditLogLevel level;
+
+    LoggingEventListener(OutputStream fso, AuditLogLevel level) {
+        this.fso = fso;
+        this.level = level;
+    }
+
     @Override
     public void queryCreated(QueryCreatedEvent queryCreatedEvent) {
-        AttributeLogger.newInstance()
-            .withAttribute("phase", "created")
-            .withAttribute("query", queryCreatedEvent.getMetadata().getQuery())
-            .withAttribute("query_id", queryCreatedEvent.getMetadata().getQueryId())
-            .withAttribute("catalog", queryCreatedEvent.getContext().getCatalog().orElse(""))
-            .withAttribute("schema", queryCreatedEvent.getContext().getSchema().orElse(""))
-            .withAttribute("principal", queryCreatedEvent.getContext().getPrincipal().orElse(""))
-            .withAttribute("user", queryCreatedEvent.getContext().getUser())
-            .withAttribute("time", queryCreatedEvent.getCreateTime().atZone(ZoneId.systemDefault()))
-            .log();
+        if (level.levelValue() < AuditLogLevel.INFO.levelValue()) {
+            return;
+        }
+        AttributeLogger.newInstance(fso)
+                .withAttribute("level", "INFO")
+                .withAttribute("phase", "created")
+                .withAttribute("query", queryCreatedEvent.getMetadata().getQuery())
+                .withAttribute("query_id", queryCreatedEvent.getMetadata().getQueryId())
+                .withAttribute("catalog", queryCreatedEvent.getContext().getCatalog().orElse(""))
+                .withAttribute("schema", queryCreatedEvent.getContext().getSchema().orElse(""))
+                .withAttribute("principal", queryCreatedEvent.getContext().getPrincipal().orElse(""))
+                .withAttribute("user", queryCreatedEvent.getContext().getUser())
+                .withAttribute("time", queryCreatedEvent.getCreateTime().atZone(ZoneId.systemDefault()))
+                .log();
     }
 
 
     @Override
     public void queryCompleted(QueryCompletedEvent queryCompletedEvent) {
-        AttributeLogger builder = AttributeLogger.newInstance()
-            .withAttribute("phase", "completed")
-            .withAttribute("query", queryCompletedEvent.getMetadata().getQuery())
-            .withAttribute("query_id", queryCompletedEvent.getMetadata().getQueryId())
-            .withAttribute("catalog", queryCompletedEvent.getContext().getCatalog().orElse(""))
-            .withAttribute("schema", queryCompletedEvent.getContext().getSchema().orElse(""))
-            .withAttribute("principal", queryCompletedEvent.getContext().getPrincipal().orElse(""))
-            .withAttribute("user", queryCompletedEvent.getContext().getUser())
-            .withAttribute("time", queryCompletedEvent.getCreateTime().atZone(ZoneId.systemDefault()))
-            .withAttribute("execution_time", queryCompletedEvent.getStatistics().getExecutionTime().orElse(Duration.ZERO).toMillis())
-            .withAttribute("cpu_time", queryCompletedEvent.getStatistics().getCpuTime().toMillis())
-            .withAttribute("analysis_time", queryCompletedEvent.getStatistics().getAnalysisTime().orElse(Duration.ZERO).toMillis())
-            .withAttribute("rows", queryCompletedEvent.getStatistics().getOutputRows());
+        if (level.levelValue() < AuditLogLevel.INFO.levelValue()) {
+            return;
+        }
+        AttributeLogger builder = AttributeLogger.newInstance(fso)
+                .withAttribute("level", "INFO")
+                .withAttribute("phase", "completed")
+                .withAttribute("query", queryCompletedEvent.getMetadata().getQuery())
+                .withAttribute("query_id", queryCompletedEvent.getMetadata().getQueryId())
+                .withAttribute("catalog", queryCompletedEvent.getContext().getCatalog().orElse(""))
+                .withAttribute("schema", queryCompletedEvent.getContext().getSchema().orElse(""))
+                .withAttribute("principal", queryCompletedEvent.getContext().getPrincipal().orElse(""))
+                .withAttribute("user", queryCompletedEvent.getContext().getUser())
+                .withAttribute("time", queryCompletedEvent.getCreateTime().atZone(ZoneId.systemDefault()))
+                .withAttribute("execution_time", queryCompletedEvent.getStatistics().getExecutionTime().orElse(Duration.ZERO).toMillis())
+                .withAttribute("cpu_time", queryCompletedEvent.getStatistics().getCpuTime().toMillis())
+                .withAttribute("analysis_time", queryCompletedEvent.getStatistics().getAnalysisTime().orElse(Duration.ZERO).toMillis())
+                .withAttribute("rows", queryCompletedEvent.getStatistics().getOutputRows());
 
-            if (queryCompletedEvent.getFailureInfo().isPresent()) {
-                QueryFailureInfo failure = queryCompletedEvent.getFailureInfo().get();
-                builder.withAttribute("error_code", failure.getErrorCode().getName());
-                builder.withAttribute("message", failure.getFailureMessage().orElse(""));
-                builder.withAttribute("failure_type", failure.getFailureType().orElse(""));
-                builder.withAttribute("failure_host", failure.getFailureHost().orElse(""));
-                builder.withAttribute("status", "failure");
-            } else {
-                builder.withAttribute("status", "success");
-            }
+        if (queryCompletedEvent.getFailureInfo().isPresent()) {
+            QueryFailureInfo failure = queryCompletedEvent.getFailureInfo().get();
+            builder.withAttribute("error_code", failure.getErrorCode().getName());
+            builder.withAttribute("message", failure.getFailureMessage().orElse(""));
+            builder.withAttribute("failure_type", failure.getFailureType().orElse(""));
+            builder.withAttribute("failure_host", failure.getFailureHost().orElse(""));
+            builder.withAttribute("status", "failure");
+        } else {
+            builder.withAttribute("status", "success");
+        }
 
-            builder.log();
+        builder.log();
     }
 
     @Override
