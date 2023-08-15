@@ -1,4 +1,4 @@
-ARG TRINO_BIN_VERSION="422"
+ARG TRINO_BIN_VERSION="423"
 FROM trinodb/trino:${TRINO_BIN_VERSION}
 USER root
 RUN apt-get update && apt-get install -y zip
