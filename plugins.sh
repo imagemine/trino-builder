@@ -2,6 +2,7 @@
 
 clean_unused_files() {
   local target=$1
+  local mode=$2
   local n=0
   local cleaned=0
   for jf in $(ls $target);
@@ -26,12 +27,12 @@ clean_unused_files() {
 }
 wd=$(pwd)
 cd /tmp
-clean_unused_files /usr/lib/trino/lib
+clean_unused_files /usr/lib/trino/lib 1
 
 for d in $(ls /usr/lib/trino/plugin);
 do
   echo clean up $d
-  clean_unused_files /usr/lib/trino/plugin/$d;
+  clean_unused_files /usr/lib/trino/plugin/$d 1;
 done;
 cd $wd
 
