@@ -38,6 +38,7 @@ all() {
   if [[ ! -z ${version} ]];
   then
     source project.properties
+    ./pkg.sh ${trino_version} 
     local image_version_tag="${owner}/${project}:${trino_version}-${version}"
     local image_latest_tag="${owner}/${project}:latest"
     echo building ${image_version_tag}

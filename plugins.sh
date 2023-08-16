@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+TRINO_DIR=$1
+if [[ -z $TRINO_DIR ]]; then
+  TRINO_DIR=trino
+fi;
+
 clean_unused_files() {
   local target=$1
   local mode=$2
@@ -13,7 +18,7 @@ clean_unused_files() {
       zip -q -d $target/$jf $pom
       cleaned=1
     done;
-    if [[ $cleaned -eq 1 ]] || [[ $jf =~ ^[a-z]+.*$ ]];
+    if [[ $cleaned -eq 1 ]] || [[ $jf =~ ^[A-Za-z]+.*$ ]];
     then
       ok=1
       echo $(date) $jf > RELEASE
@@ -25,14 +30,12 @@ clean_unused_files() {
     n=$((n+1))
   done;
 }
-wd=$(pwd)
-cd /tmp
-clean_unused_files /usr/lib/trino/lib 1
 
-for d in $(ls /usr/lib/trino/plugin);
+clean_unused_files ${TRINO_DIR}/lib 1
+
+for d in $(ls ${TRINO_DIR}/plugin);
 do
   echo clean up $d
-  clean_unused_files /usr/lib/trino/plugin/$d 1;
+  clean_unused_files ${TRINO_DIR}/plugin/$d 1;
 done;
-cd $wd
 

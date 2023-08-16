@@ -13,4 +13,5 @@ hive/data
 *.class
 
 
+docker-build
 
