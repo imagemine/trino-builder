@@ -4,6 +4,11 @@ set -euo pipefail
 : "${version:=${1:-423}}"
 
 WORK_DIR=docker-build
+if [[ ! -d ${WORK_DIR} ]];
+then
+  mkdir ${WORK_DIR}
+fi;
+
 if [[ ! -f ${WORK_DIR}/trino-server-${version}.tar.gz ]];
 then
   curl -sk -o ${WORK_DIR}/trino-server-${version}.tar.gz https://repo1.maven.org/maven2/io/trino/trino-server/${version}/trino-server-${version}.tar.gz
