@@ -3,7 +3,7 @@
 set -euo pipefail
 : "${version:=${1:-423}}"
 
-WORK_DIR=docker-build
+WORK_DIR="docker-build"
 if [[ ! -d ${WORK_DIR} ]];
 then
   mkdir ${WORK_DIR}
@@ -32,6 +32,6 @@ cp -r trino-ext-authz/build/ext/ ${TRINO_DIR}/plugin/ext/
 cp hive-authz/build/libs/hive-authz.jar ${TRINO_DIR}/plugin/hive/hive-authz.jar
 cp run-trino ${TRINO_DIR}/bin/run-trino
 
-./plugins.sh ${TRINO_DIR}
+#./plugins.sh ${TRINO_DIR}
 
 
