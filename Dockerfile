@@ -1,7 +1,9 @@
-ARG TRINO_BIN_VERSION="424"
+ARG TRINO_BIN_VERSION="436"
 FROM trinodb/trino:${TRINO_BIN_VERSION}
 USER root
-RUN apt-get update && apt-get install -y zip && apt-get upgrade -y openssl bash gzip tar wget
+RUN microdnf update -y && \
+    microdnf install -y zip openssl bash gzip tar wget && \
+    microdnf upgrade -y
 USER trino
 RUN mkdir -p /usr/lib/trino/plugin/ext
 COPY trino-ext-authz/build/libs/trino-ext-authz.jar /usr/lib/trino/plugin/ext/trino-ext-authz.jar
