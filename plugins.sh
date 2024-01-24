@@ -1,5 +1,24 @@
 #!/usr/bin/env bash
 
+extra_libs() {
+  local target=$1
+  local lib_file="/tmp/extra_libs.properties"
+  for line in $(cat ${lib_file});
+  do
+    fname=$(basename $line)
+    patt="^"$(echo $fname|sed -E "s/[0-9]+\.[0-9]+\.[0-9]+/[0-9]+\.[0-9]+\.[0-9]+/g")"$"
+    set +e
+    matching_file=$(ls $target|grep -E $patt|head -1)
+    if [[ $matching_file != "" ]];
+    then
+      echo removing old version ${matching_file} and replacing with ${fname}
+      rm $target/$matching_file
+    fi;
+    set -e
+    curl -sL -o ${target}/${fname} ${line}
+  done;
+}
+
 clean_unused_files() {
   local target=$1
   local mode=$2
@@ -29,6 +48,7 @@ wd=$(pwd)
 cd /tmp
 clean_unused_files /usr/lib/trino/lib 1
 
+extra_libs /usr/lib/trino/plugin/ext
 for d in $(ls /usr/lib/trino/plugin);
 do
   echo clean up $d
