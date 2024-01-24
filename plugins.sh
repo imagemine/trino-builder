@@ -2,9 +2,10 @@
 
 extra_libs() {
   local target=$1
-  local lib_file="/tmp/extra_libs.properties"
+  local lib_file="/tmp/extra-libs.properties"
   for line in $(cat ${lib_file});
   do
+    echo $line
     fname=$(basename $line)
     patt="^"$(echo $fname|sed -E "s/[0-9]+\.[0-9]+\.[0-9]+/[0-9]+\.[0-9]+\.[0-9]+/g")"$"
     set +e
@@ -46,13 +47,13 @@ clean_unused_files() {
 }
 wd=$(pwd)
 cd /tmp
-clean_unused_files /usr/lib/trino/lib 1
+clean_unused_files /usr/lib/trino/lib 0
 
 extra_libs /usr/lib/trino/plugin/ext
 for d in $(ls /usr/lib/trino/plugin);
 do
   echo clean up $d
-  clean_unused_files /usr/lib/trino/plugin/$d 1;
+  clean_unused_files /usr/lib/trino/plugin/$d 0;
 done;
 cd $wd
 
