@@ -2,7 +2,7 @@ ARG TRINO_BIN_VERSION="436"
 FROM trinodb/trino:${TRINO_BIN_VERSION}
 USER root
 RUN microdnf update -y && \
-    microdnf install -y zip openssl bash gzip tar wget curl && \
+    microdnf install -y zip openssl bash gzip tar wget && \
     microdnf upgrade -y
 
 RUN mkdir -p /usr/lib/trino/plugin/ext && \
