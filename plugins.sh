@@ -39,32 +39,11 @@ clean_unused_files() {
       echo $(date) $jf > RELEASE
       zip -q -u $target/$jf RELEASE
       if [[ "$mode" == "1" ]]; then
+        echo $target/$jf $target/lib-$n.jar
         mv $target/$jf $target/lib-$n.jar
       fi;
     fi;
     n=$((n+1))
-  done;
-}
-
-clean_unused_files_v2() {
-  local target=$1
-  local resname=$2
-  local filter=$3
-  if [[ "$resname" == "" ]]; then
-    resname="pom.(xml|properties)$"
-  fi;
-  local n=0
-  for jf in $(ls $target);
-  do
-    echo $jf $filter
-    if [[ "$filter" == "" ]] || [[ $jf =~ $filter ]]; then
-      cleaned=0
-      for pom in $(jar tvf $target/$jf|grep -E ${resname}|awk -F" " '{print $8}');
-      do
-        zip -d $target/$jf $pom
-      done;
-      n=$((n+1))
-    fi;
   done;
 }
 
@@ -76,10 +55,7 @@ extra_libs /usr/lib/trino/plugin/ext
 for d in $(ls /usr/lib/trino/plugin);
 do
   echo clean up $d
-  clean_unused_files_v2 /usr/lib/trino/plugin/$d "gson.*$" "rubix-presto-shaded-0.3.18.jar"
-  clean_unused_files_v2 /usr/lib/trino/plugin/$d "guava.*$" "rubix-presto-shaded-0.3.18.jar"
-  clean_unused_files_v2 /usr/lib/trino/plugin/$d "guava.*$" "gcs-connector-3.0.0-shaded.jar"
-  clean_unused_files /usr/lib/trino/plugin/$d 1;
+  clean_unused_files /usr/lib/trino/plugin/$d 0;
 done;
 cd $wd
 
