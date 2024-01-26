@@ -14,6 +14,7 @@ COPY trino-ext-authz/build/ext/ /usr/lib/trino/plugin/ext/
 
 COPY hive-authz/build/libs/hive-authz.jar /usr/lib/trino/plugin/hive/hive-authz.jar
 COPY extra-libs.properties /tmp/extra-libs.properties
+COPY delete-libs.properties /tmp/delete-libs.properties
 COPY plugins.sh /tmp/plugins.sh
 
 # Run the script as root if it requires root permissions
