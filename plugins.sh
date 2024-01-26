@@ -55,7 +55,7 @@ extra_libs /usr/lib/trino/plugin/ext
 for d in $(ls /usr/lib/trino/plugin);
 do
   echo clean up $d
-  clean_unused_files /usr/lib/trino/plugin/$d 0;
+  clean_unused_files /usr/lib/trino/plugin/$d 1;
 done;
 cd $wd
 
