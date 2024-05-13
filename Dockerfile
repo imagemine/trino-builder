@@ -17,9 +17,6 @@ COPY extra-libs.properties /tmp/extra-libs.properties
 COPY delete-libs.properties /tmp/delete-libs.properties
 COPY plugins.sh /tmp/plugins.sh
 
-# Run the script as root if it requires root permissions
-RUN /tmp/plugins.sh
-
 # Remove zip and switch back to trino user
 RUN microdnf remove -y zip
 
