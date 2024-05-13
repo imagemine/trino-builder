@@ -303,13 +303,13 @@ public class ExternalAuthzSystemAccessControl extends AllowAllSystemAccessContro
         }
     }
 
-    @Override
-    public void checkCanAccessCatalog(SystemSecurityContext context, String catalogName)
-    {
-        if (!canAccessCatalog(context, catalogName, READ_ONLY)) {
-            denyCatalogAccess(catalogName);
-        }
-    }
+    // @Override
+    // public void checkCanAccessCatalog(SystemSecurityContext context, String catalogName)
+    // {
+    //     if (!canAccessCatalog(context, catalogName, READ_ONLY)) {
+    //         denyCatalogAccess(catalogName);
+    //     }
+    // }
 
     @Override
     public void checkCanCreateCatalog(SystemSecurityContext context, String catalogName)
