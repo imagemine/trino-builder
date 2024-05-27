@@ -1,4 +1,4 @@
-ARG TRINO_BIN_VERSION="447"
+ARG TRINO_BIN_VERSION="448"
 FROM trinodb/trino:${TRINO_BIN_VERSION}
 USER root
 RUN microdnf update -y && \
